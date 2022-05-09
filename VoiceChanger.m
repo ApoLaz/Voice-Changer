@@ -52,7 +52,6 @@ classdef VoiceChanger < matlab.apps.AppBase
             global Recorder                 % set Recorder as global to use it at the other functions
 
             stop(Recorder);                 % using stop which a part o MATLAB's record to stop it
-            disp('Recording has stop');     
             x = getaudiodata(Recorder);     % at x we insert with MATLAB's getaudiodata. the data of our Recorder
             Fs = Recorder.SampleRate;       % take as Fs the original Sample Rate of our Recorder
             
