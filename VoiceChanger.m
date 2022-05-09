@@ -37,62 +37,63 @@ classdef VoiceChanger < matlab.apps.AppBase
 
         % Button pushed function: RecordButton
         function RecordButtonPushed(app, event)
-            global Recorder
-            global counter
+            global Recorder                 % set Recorder as global to use it at the other functions
+            global counter                  % set counter as global to use it at the other functions for multi-processes
             
-            Recorder = audiorecorder;
+            Recorder = audiorecorder;       % we used MATLAB's audiorecorder and saved the data at Recorder
 
-            disp('Recording');
+            record(Recorder);               % we used record of MATLAB to start our recording
 
-            record(Recorder);
-
-            counter = 0;        
+            counter = 0;                    % we put the value of 0 at our counter to using later to our program for multi-processing
         end
 
         % Button pushed function: StopRecordingButton
         function StopRecordingButtonPushed(app, event)
-            global Recorder
-            stop(Recorder);
-            disp('Recording has stop');
-            Fs = Recorder.SampleRate
-            x = getaudiodata(Recorder);
+            global Recorder                 % set Recorder as global to use it at the other functions
+
+            stop(Recorder);                 % using stop which a part o MATLAB's record to stop it
+            disp('Recording has stop');     
+            x = getaudiodata(Recorder);     % at x we insert with MATLAB's getaudiodata. the data of our Recorder
+            Fs = Recorder.SampleRate;       % take as Fs the original Sample Rate of our Recorder
             
-            tsignal= [0:length(x)-1]/Fs
-            plot(app.UIAxes,tsignal,x);
+            tsignal = [0:length(x)-1]/Fs;   % at tsignal we insert the lenght of x to use it at the plot to have the seconds of our recording at X axe
+            plot(app.UIAxes,tsignal,x);     % here we plot our unprocessed recording at input Axe of our programms UI
         end
 
         % Button pushed function: PitchButton
         function PitchButtonPushed(app, event)
-            global Recorder
-            global output_x
-            global output_Fs
-            global counter
+            global Recorder                 
+            global output_x                 % set output_x as global to use it at the other functions for mutli-processing
+            global output_Fs                % set output_Fs as global to use it at the other functions for mutli-processing
+            global counter                  
 
-            if counter == 0 
-                x = getaudiodata(Recorder);
-                Fs = Recorder.SampleRate;
+            if counter == 0                 % if loop to check the value of the counter
+                x = getaudiodata(Recorder); % if the value of counter = 0 then insert at x and Fs 
+                Fs = Recorder.SampleRate;   % the data and Sample Rates of the original Recording
             else
-                x = output_x
-                Fs = output_Fs
+                x = output_x;               % else insert at x the output_x which is the data of the last saved process
+                Fs = output_Fs;             % Fs take the output_Fs which is the Fs of the last saved process
             end
 
-            nsemitones = app.SemitonesSlider.Value;
-            lockPhase = false;
-            Fs = Recorder.SampleRate;
+            nsemitones = app.SemitonesSlider.Value; % here the program take the value of semitones that the user gives with the semitones slidebar 
+            lockPhase = false;               
             
-            y = shiftPitch(x,nsemitones,'LockPhase',lockPhase);
+            
+            y = shiftPitch(x,nsemitones,'LockPhase',lockPhase); % at y insert the process of the shiftPitch function
             sound(y,Fs);
+ 
+            % create plot ( again )
+            tsignal = [0:length(y)-1]/Fs;   
+            plot(app.UIAxes_2,tsignal,y);    
+                                            
 
-            tsignal= [0:length(y)-1]/Fs
-            plot(app.UIAxes_2,tsignal,y);
+            if app.SaveCheckBox.Value == 1  % at this if loop the check if the value of the Check-Box is true
 
-            if app.SaveCheckBox.Value == 1
+                output_x = y;               % to give at output_x the data of y 
+                output_Fs = Fs;             % and at output_Fs the Fs that we used for this process
+                counter = counter+1;        % and we rise the counter by 1
 
-                output_x = y;
-                output_Fs = Fs;
-                counter = counter+1
-
-                app.SaveCheckBox.Value = false;
+                app.SaveCheckBox.Value = false; % here we change the value of the Check-Box from true to false
             end
         end
 
@@ -103,34 +104,30 @@ classdef VoiceChanger < matlab.apps.AppBase
             global output_Fs
             global counter
             
-            if counter == 0 
-                x = getaudiodata(Recorder);
-                Fs = Recorder.SampleRate;
+            if counter == 0                 % if loop to check the value of the counter
+                x = getaudiodata(Recorder); % if the value of counter = 0 then insert at x and Fs 
+                Fs = Recorder.SampleRate;   % the data and Sample Rates of the original Recording
             else
-                x = output_x
-                Fs = output_Fs
+                x = output_x;               % else insert at x the output_x which is the data of the last saved process
+                Fs = output_Fs;             % Fs take the output_Fs which is the Fs of the last saved process
             end
             
-            multiplier = app.SpeedSlider.Value;
+            multiplier = app.SpeedSlider.Value; % at multiplier we insert the values that the user gives via speed slidebar
             
-            y = Fs * multiplier;
-            sound(x,y);
-           
-%             y = stretchAudio(x,multiplier);
-%             sound (y);            
-%                    
-            tsignal= [0:length(x)-1]/y
-            plot(app.UIAxes_2,tsignal,x);
-            
-            
+            Fs = Fs * multiplier;               % we insert at the new Fs the value of the old Fs mutliplied with the multiplier
+            sound(x,Fs);
+         
+            % create plot ( again )
+            tsignal= [0:length(x)-1]/Fs         
+            plot(app.UIAxes_2,tsignal,x);                 
 
-            if app.SaveCheckBox.Value == 1
+            if app.SaveCheckBox.Value == 1      % at this if loop the check if the value of the Check-Box is true
 
-                output_x = x;
-                output_Fs = y;
-                counter = counter+1
+                output_x = x;                   % to give at output_x the data of x 
+                output_Fs = Fs;                 % and at output_Fs the new Fs that we used for this process
+                counter = counter+1;            % and we rise the counter by 1
 
-                app.SaveCheckBox.Value = false;
+                app.SaveCheckBox.Value = false; % here we change the value of the Check-Box from true to false
             end
         end
 
@@ -141,60 +138,59 @@ classdef VoiceChanger < matlab.apps.AppBase
             global output_Fs
             global counter
             
-            if counter == 0 
-                x = getaudiodata(Recorder);
-                Fs = Recorder.SampleRate;
+            if counter == 0                 % if loop to check the value of the counter
+                x = getaudiodata(Recorder); % if the value of counter = 0 then insert at x and Fs 
+                Fs = Recorder.SampleRate;   % the data and Sample Rates of the original Recording
             else
-                x = output_x
-                Fs = output_Fs
+                x = output_x;               % else insert at x the output_x which is the data of the last saved process
+                Fs = output_Fs;             % Fs take the output_Fs which is the Fs of the last saved process
             end
 
-            y = x * app.VolumeSlider.Value;
+            y = x * app.VolumeSlider.Value; % insert at y the data of x multiplied with the value of the Vomule Slidebar that user gives
             sound(y,Fs);
             
-            tsignal= [0:length(y)-1]/Fs
+            % create plot ( again )
+            tsignal= [0:length(y)-1]/Fs;
             plot(app.UIAxes_2,tsignal,y);
-            %plot(app.UIAxes_2,y);
             
-            if app.SaveCheckBox.Value == 1
-
-                output_x = y;
-                output_Fs = Fs;
-                counter = counter+1
-
-                app.SaveCheckBox.Value = false;
+            if app.SaveCheckBox.Value == 1      % if loop the check if the value of the Check-Box is true
+                output_x = y;                   % to give at output_x the data of y 
+                output_Fs = Fs;                 % at output_Fs the new Fs that used for this process
+                counter = counter+1             % rise the counter by 1
+    
+                app.SaveCheckBox.Value = false; % change the value of the Check-Box from true to false
             end
         end
 
         % Button pushed function: EchoButton
         function EchoButtonPushed(app, event)
-            global Recorder
-            global output_x
-            global output_Fs
-            global counter
+            global Recorder                 
+            global output_x                 
+            global output_Fs                
+            global counter                  
 
-            if counter == 0 
-                x = getaudiodata(Recorder);
-                Fs = Recorder.SampleRate;
+            if counter == 0                 % if loop to check the value of the counter
+                x = getaudiodata(Recorder); % if the value of counter = 0 then insert at x and Fs 
+                Fs = Recorder.SampleRate;   % the data and Sample Rates of the original Recording
             else
-                x = output_x
-                Fs = output_Fs
+                x = output_x;               % else insert at x the output_x which is the data of the last saved process
+                Fs = output_Fs;             % Fs take the output_Fs which is the Fs of the last saved process
             end
 
             delay=0.5;
             amp=0.5;
-            ds = round((delay)*Fs);    %%CALCULATING DELAY SAMPLE NUMBERS
-            if ds==0                   %%THIS APPENDS TO THE INPUT TO EQUAL THE SIZE WITH OUTPUT
-                append=[];             %%APPENDS EMPTY MATRIX WHILE 'ds' IS ZERO
+            ds = round((delay)*Fs);         % calculating delay sample numbers
+            if ds==0                        % this appends to the input to equal the size with output
+                append=[];                  % appends empty matrix while 'ds' is zero
             else
-                append=zeros(ds,1);    %%APPENDS ZERO VECTOR FOR THE DELAY
-            end
-            ain = [append;x];       %%APPENDED INPUT
-            dmwa = amp*ain;             %%AMPLIFIED SIGNAL
-            outd = [x; append];     %%APPENDED OUTPUT
-            out = (dmwa+outd);          %%OUTPUT WITHOUT SCALLING
+                append=zeros(ds,1);         % appends zero vector for the delay
+            end 
+            ain = [append;x];               % appended input
+            dmwa = amp*ain;                 % amplified signal
+            outd = [x; append];             % appended output
+            out = (dmwa+outd);              % output without scalling
                 
-            %%% SCALLING (IF NEEDED)   
+            % scalling (if needed)   
             mx = max(out);
             mn = min(out);
             if max(abs(out))>1
@@ -204,22 +200,22 @@ classdef VoiceChanger < matlab.apps.AppBase
                     output = out/abs(mn);
                 end
             else
-                 output=out;            %%OUTPUT WITH SCALLING(IF NEEDED)
+                 output=out;            % output with scalling (if needed)
             end
             
             sound(output,Fs);
 
+            % create plot ( again )
             tsignal= [0:length(output)-1]/Fs
             plot(app.UIAxes_2,tsignal,output);
-            %plot(app.UIAxes_2,output);
             
-            if app.SaveCheckBox.Value == 1
+            if app.SaveCheckBox.Value == 1  % if loop the check if the value of the Check-Box is true
 
-                output_x = output;
-                output_Fs = Fs;
-                counter = counter+1
+                output_x = output;          % to give at output_x the data of output 
+                output_Fs = Fs;             % at output_Fs the new Fs that used for this process
+                counter = counter+1;
 
-                app.SaveCheckBox.Value = false;
+                app.SaveCheckBox.Value = false; % change the value of the Check-Box from true to false
             end
         end
 
@@ -230,33 +226,33 @@ classdef VoiceChanger < matlab.apps.AppBase
             global output_Fs
             global counter
 
-            if counter == 0 
-                x = getaudiodata(Recorder);
-                Fs = Recorder.SampleRate;
+            if counter == 0                 % if loop to check the value of the counter
+                x = getaudiodata(Recorder); % if the value of counter = 0 then insert at x and Fs 
+                Fs = Recorder.SampleRate;   % the data and Sample Rates of the original Recording
             else
-                x = output_x
-                Fs = output_Fs
+                x = output_x;               % else insert at x the output_x which is the data of the last saved process
+                Fs = output_Fs;             % Fs take the output_Fs which is the Fs of the last saved process
             end
 
             [m,n]=size(x);
-            if n==1 % If y is not row vector this convert it into row vector.
+            if n==1                         % If x is not row vector this convert it into row vector.
                 x=x'; 
             end
-            x1=fliplr(x); % Now flip it and check audio.
+            x1=fliplr(x);                   % Now flip it and check audio.
             
-            sound(x1,Fs); % Now, lest listen to your reverse audio.
+            sound(x1,Fs); 
 
-            tsignal= [0:length(x1)-1]/Fs
+            % create plot ( again )
+            tsignal= [0:length(x1)-1]/Fs;
             plot(app.UIAxes_2,tsignal,x1);
-            plot(app.UIAxes_2,x1);
+            
+            if app.SaveCheckBox.Value == 1  % if loop the check if the value of the Check-Box is true
 
-            if app.SaveCheckBox.Value == 1
-
-                output_x = x1;
-                output_Fs = Fs;
-                counter = counter+1
-
-                app.SaveCheckBox.Value = false;
+                output_x = x1;              % to give at output_x the data of x1 
+                output_Fs = Fs;             % and at output_Fs the new Fs that used for this process
+                counter = counter+1;        % rise the counter by 1
+    
+                app.SaveCheckBox.Value = false; % change the value of the Check-Box from true to false
             end
         end
 
@@ -267,36 +263,33 @@ classdef VoiceChanger < matlab.apps.AppBase
             global output_Fs
             global counter
 
-            if counter == 0 
-                x = getaudiodata(Recorder);
-                Fs = Recorder.SampleRate;
+            if counter == 0                 % if loop to check the value of the counter
+                x = getaudiodata(Recorder); % if the value of counter = 0 then insert at x and Fs 
+                Fs = Recorder.SampleRate;   % the data and Sample Rates of the original Recording
             else
-                %[output_x,output_Fs] = audioread('appoutputtest.wav')
-                
-                x = output_x
-                Fs = output_Fs
+                x = output_x;               % else insert at x the output_x which is the data of the last saved process
+                Fs = output_Fs;             % Fs take the output_Fs which is the Fs of the last saved process
             end
-            %y = getaudiodata(Recorder);
-            
-            nsemitones=4;
-            lockPhase= true;
-            audioOut = shiftPitch(x,nsemitones,"LockPhase",lockPhase);
+                        
+            nsemitones=4;                   
+            lockPhase= true;                % increase fidelity
+            audioOut = shiftPitch(x,nsemitones,"LockPhase",lockPhase); 
 
             sound(audioOut,Fs);
 
-            tsignal= [0:length(audioOut)-1]/Fs
+            % create plot ( again )
+            tsignal= [0:length(audioOut)-1]/Fs;
             plot(app.UIAxes_2,tsignal,audioOut);
-            %plot(app.UIAxes_2,audioOut);
             
+            if app.SaveCheckBox.Value == 1  % if loop the check if the value of the Check-Box is true
 
-            if app.SaveCheckBox.Value == 1
-
-                output_x = audioOut;
-                output_Fs = Fs;
-                counter = counter+1
-
-                app.SaveCheckBox.Value = false;
+                output_x = audioOut;        % to give at output_x the data of audioOut 
+                output_Fs = Fs;             % and at output_Fs the new Fs that used for this process
+                counter = counter+1;        % rise the counter by 1
+    
+                app.SaveCheckBox.Value = false; % change the value of the Check-Box from true to false
             end
+            
         end
 
         % Button pushed function: NoiseFilterButton
@@ -306,21 +299,16 @@ classdef VoiceChanger < matlab.apps.AppBase
             global output_Fs
             global counter
 
-            if counter == 0 
-                x = getaudiodata(Recorder);
-                Fs = Recorder.SampleRate;
+            if counter == 0                 % if loop to check the value of the counter
+                x = getaudiodata(Recorder); % if the value of counter = 0 then insert at x and Fs 
+                Fs = Recorder.SampleRate;   % the data and Sample Rates of the original Recording
             else
-                x = output_x
-                Fs = output_Fs
-            end
-
-            
-            %signal = getaudiodata(Recorder);
-            Ts=1/Fs;
-            timeVector = (0:Ts:length(x)*Ts - Ts);
-            
+                x = output_x;               % else insert at x the output_x which is the data of the last saved process
+                Fs = output_Fs;             % Fs take the output_Fs which is the Fs of the last saved process
+            end      
+                       
             %first order low pass filter
-            filtHz =500;
+            filtHz = 500;
             filtnum = [2*pi*filtHz];
             filtden =[  1 1*pi*filtHz];
             [filtnumd,filtdend] = c2dm(filtnum,filtden,1/Fs,'zoh');
@@ -330,17 +318,17 @@ classdef VoiceChanger < matlab.apps.AppBase
 
             sound(Filtered,Fs);
 
-            tsignal= [0:length(Filtered)-1]/Fs
-            plot(app.UIAxes_2,tsignal,Filtered);
-          %  plot(app.UIAxes_2,Filtered);
+            % create plot ( again )
+            tsignal= [0:length(Filtered)-1]/Fs;
+            plot(app.UIAxes_2,tsignal,Filtered);          
 
-            if app.SaveCheckBox.Value == 1
+            if app.SaveCheckBox.Value == 1  % if loop the check if the value of the Check-Box is true
 
-                output_x = Filtered;
-                output_Fs = Fs;
-                counter = counter+1
-
-                app.SaveCheckBox.Value = false;
+                output_x = Filtered;        % to give at output_x the data of Filtered
+                output_Fs = Fs;             % and at output_Fs the new Fs that used for this process
+                counter = counter+1;        % rise the counter by 1
+    
+                app.SaveCheckBox.Value = false; % change the value of the Check-Box from true to false
             end
         end
 
@@ -351,41 +339,46 @@ classdef VoiceChanger < matlab.apps.AppBase
             global output_Fs
             global counter
 
-            if counter == 0 
-                x = getaudiodata(Recorder);
-                Fs = Recorder.SampleRate;
+            if counter == 0                 % if loop to check the value of the counter
+                x = getaudiodata(Recorder); % if the value of counter = 0 then insert at x and Fs 
+                Fs = Recorder.SampleRate;   % the data and Sample Rates of the original Recording
             else
-                x = output_x
-                Fs = output_Fs
+                x = output_x;               % else insert at x the output_x which is the data of the last saved process
+                Fs = output_Fs;             % Fs take the output_Fs which is the Fs of the last saved process
             end
+                       
+            N = length(x);                  % N = number of samples
             
-           
-            N = length(x);
-            % N = number of samples
             % Now generate a general plot of the frequency spectrum
             f = Fs/N.*(0:N-1);
+            
             % calculate each frequency component
             YY = fft(x,N);
-            Y = abs(YY(1:N))./(N/2);
-            
-            %fNq = Fs/2; 
-            Wn = [1000 3000]/(Fs/2);
+            Y = abs(YY(1:N))./(N/2);            
+             
+            Wn = [1000 3000]/(Fs/2);        % set hz range 1000 to 3000 % Fs/2 = nyquist
             [b,a]=butter(6,Wn,'stop');
             filterBand_stop=filtfilt(b,a,x);
             
-
-            tsignal= [0:length(filterBand_stop)-1]/Fs
+            % create plot ( again )
+            tsignal= [0:length(filterBand_stop)-1]/Fs;
             plot(app.UIAxes_2,tsignal,filterBand_stop);
 
-            % calculate each frequency component for the altered file
+            % calculate each frequency component for the file and create frequency plot
             YY=fft(filterBand_stop,N);
             Y1=abs(YY(1:N))./(N/2);
             plot(app.UIAxes2,f,20*log(Y1))
 
             sound (filterBand_stop,Fs)
-            %  
 
+            if app.SaveCheckBox.Value == 1  % if loop the check if the value of the Check-Box is true
 
+                output_x = filterBand_stop; % give at output_x the data of filterBand_stop
+                output_Fs = Fs;             % at output_Fs the new Fs that used for this process
+                counter = counter+1;        % rise the counter by 1
+    
+                app.SaveCheckBox.Value = false; % change the value of the Check-Box from true to false
+            end
         end
 
         % Button pushed function: BandpassFilterButton
@@ -395,41 +388,46 @@ classdef VoiceChanger < matlab.apps.AppBase
             global output_Fs
             global counter
 
-            if counter == 0 
-                x = getaudiodata(Recorder);
-                Fs = Recorder.SampleRate;
+            if counter == 0                 % if loop to check the value of the counter
+                x = getaudiodata(Recorder); % if the value of counter = 0 then insert at x and Fs 
+                Fs = Recorder.SampleRate;   % the data and Sample Rates of the original Recording
             else
-                x = output_x
-                Fs = output_Fs
+                x = output_x;               % else insert at x the output_x which is the data of the last saved process
+                Fs = output_Fs;             % Fs take the output_Fs which is the Fs of the last saved process
             end
+                        
+            N=length(x);                    % N = number of samples
             
-            %%%    [y, Fs]=audioread('input.wav'); 
-
-            N=length(x);
-            % N = number of samples
             % Now generate a general plot of the frequency spectrum
             f=Fs/N.*(0:N-1);
+            
             % calculate each frequency component
             YY=fft(x,N);
             Y=abs(YY(1:N))./(N/2);
-
-            %fNq = Fs/2; 
-            Wn = [1000 3000]/(Fs/2);
+            
+            Wn = [1000 3000]/(Fs/2);        % set hz range 1000 to 3000 % Fs/2 = nyquist  
             [b,a]=butter(6,Wn);
             filterBand_pass=filtfilt(b,a,x);
 
+            % create plot ( again )
             tsignal= [0:length(filterBand_pass)-1]/Fs
             plot(app.UIAxes_2,tsignal,filterBand_pass);
             
-            % calculate each frequency component for the altered file
+            % calculate each frequency component for the file and create frequency plot
             YY=fft(filterBand_pass,N);
             Y1=abs(YY(1:N))./(N/2);
-           
             plot(app.UIAxes2,f,20*log(Y1))
-   
-            %do playback
-            %soundsc(filterBand_pass);
+              
             sound(filterBand_pass,Fs)
+
+            if app.SaveCheckBox.Value == 1  % at this if loop the check if the value of the Check-Box is true
+
+                output_x = filterBand_pass; % to give at output_x the data of filterBand_pass
+                output_Fs = Fs;             % and at output_Fs the new Fs that we used for this process
+                counter = counter+1         % and we rise the counter by 1
+    
+                app.SaveCheckBox.Value = false; % here we change the value of the Check-Box from true to false
+            end
         end
 
         % Button pushed function: SaveButton
@@ -438,16 +436,13 @@ classdef VoiceChanger < matlab.apps.AppBase
             global output_x
             global output_Fs
             global counter
-            
-
-         %   audiowrite('appoutputtest.wav',output_x,output_Fs);
-
-            if counter == 0
-                x = getaudiodata(Recorder);
-                Fs = Recorder.SampleRate;
-                audiowrite('appinputtest.wav',x,Fs);
-            else
-                audiowrite('appoutputtest.wav',output_x,output_Fs);
+           
+            if counter == 0                             % if loop to check the value of counter
+                x = getaudiodata(Recorder);             % if the values is 0 then insert at x the original data of the recording
+                Fs = Recorder.SampleRate;               % and at Fs the original Sample Rates of the recording
+                audiowrite('original_rec.wav',x,Fs);    % with audiowrite export at the same folder with the program the original recording
+            else                                        % else if the value of counter is over 0 
+                audiowrite('processed_rec.wav',output_x,output_Fs); % using audiowrite to export the processed recording using as argument the output_x and output_Fs
             end
         end
 
@@ -455,22 +450,16 @@ classdef VoiceChanger < matlab.apps.AppBase
         function PlayButtonPushed(app, event)
             global Recorder
             global output_x
-            global output_Fs
+            global output_Fs           
 
-           
-
-            %s = comp.Switch.Value
-
-            if app.Switch.Value == 0
-                x = getaudiodata(Recorder);
-                Fs = Recorder.SampleRate;
-                sound(x,Fs);
-             else 
-                 
-                 sound(output_x,output_Fs);
+            if app.Switch.Value == 0                    % if loop to check the value of input/processed switch // 0 = input, 1 = processed
+                x = getaudiodata(Recorder);             % insert at x the original data of the recording
+                Fs = Recorder.SampleRate;               % at Fs the original Sample Rates of the recording
+                sound(x,Fs);                            % with sound play the original recording
+             else                    
+                sound(output_x,output_Fs);              % else this this sound play the processed recording
                  
             end
-
         end
     end
 
