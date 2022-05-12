@@ -15,7 +15,7 @@ classdef VoiceChanger < matlab.apps.AppBase
         SpeedSliderLabel      matlab.ui.control.Label
         Switch                matlab.ui.control.Switch
         PlayButton            matlab.ui.control.Button
-        SaveButton            matlab.ui.control.Button
+        ExportButton          matlab.ui.control.Button
         BandpassFilterButton  matlab.ui.control.Button
         StopbandFilterButton  matlab.ui.control.Button
         NoiseFilterButton     matlab.ui.control.Button
@@ -40,11 +40,11 @@ classdef VoiceChanger < matlab.apps.AppBase
             global Recorder                 % set Recorder as global to use it at the other functions
             global counter                  % set counter as global to use it at the other functions for multi-processes
             
-            Recorder = audiorecorder;       % we used MATLAB's audiorecorder and saved the data at Recorder
+            Recorder = audiorecorder;       % used MATLAB's audiorecorder and saved the data at Recorder
 
-            record(Recorder);               % we used record of MATLAB to start our recording
+            record(Recorder);               % used record of MATLAB to start our recording
 
-            counter = 0;                    % we put the value of 0 at our counter to using later to our program for multi-processing
+            counter = 0;                    % put the value of 0 at our counter to using later to our program for multi-processing
         end
 
         % Button pushed function: StopRecordingButton
@@ -52,6 +52,7 @@ classdef VoiceChanger < matlab.apps.AppBase
             global Recorder                 % set Recorder as global to use it at the other functions
 
             stop(Recorder);                 % using stop which a part o MATLAB's record to stop it
+                
             x = getaudiodata(Recorder);     % at x we insert with MATLAB's getaudiodata. the data of our Recorder
             Fs = Recorder.SampleRate;       % take as Fs the original Sample Rate of our Recorder
             
@@ -81,9 +82,9 @@ classdef VoiceChanger < matlab.apps.AppBase
             y = shiftPitch(x,nsemitones,'LockPhase',lockPhase); % at y insert the process of the shiftPitch function
             sound(y,Fs);
  
-            % create plot ( again )
-            tsignal = [0:length(y)-1]/Fs;   
-            plot(app.UIAxes_2,tsignal,y);    
+            % create plot 
+            tsignal = [0:length(y)-1]/Fs;   % using the tsignal for y's size to get the secs
+            plot(app.UIAxes_2,tsignal,y);   % plot the process at UIAxxes_2 giving tsignal to have secs at X axe and y for the data 
                                             
 
             if app.SaveCheckBox.Value == 1  % at this if loop the check if the value of the Check-Box is true
@@ -120,11 +121,11 @@ classdef VoiceChanger < matlab.apps.AppBase
             tsignal= [0:length(x)-1]/Fs         
             plot(app.UIAxes_2,tsignal,x);                 
 
-            if app.SaveCheckBox.Value == 1      % at this if loop the check if the value of the Check-Box is true
+            if app.SaveCheckBox.Value == 1  % at this if loop the check if the value of the Check-Box is true
 
-                output_x = x;                   % to give at output_x the data of x 
-                output_Fs = Fs;                 % and at output_Fs the new Fs that we used for this process
-                counter = counter+1;            % and we rise the counter by 1
+                output_x = x;               % to give at output_x the data of x 
+                output_Fs = Fs;             % and at output_Fs the new Fs that we used for this process
+                counter = counter+1;        % and we rise the counter by 1
 
                 app.SaveCheckBox.Value = false; % here we change the value of the Check-Box from true to false
             end
@@ -199,7 +200,7 @@ classdef VoiceChanger < matlab.apps.AppBase
                     output = out/abs(mn);
                 end
             else
-                 output=out;            % output with scalling (if needed)
+                 output=out;                % output with scalling (if needed)
             end
             
             sound(output,Fs);
@@ -429,8 +430,8 @@ classdef VoiceChanger < matlab.apps.AppBase
             end
         end
 
-        % Button pushed function: SaveButton
-        function SaveButtonPushed(app, event)
+        % Button pushed function: ExportButton
+        function ExportButtonPushed(app, event)
             global Recorder
             global output_x
             global output_Fs
@@ -563,11 +564,11 @@ classdef VoiceChanger < matlab.apps.AppBase
             app.BandpassFilterButton.Position = [291 476 100 23];
             app.BandpassFilterButton.Text = 'Bandpass Filter';
 
-            % Create SaveButton
-            app.SaveButton = uibutton(app.UIFigure, 'push');
-            app.SaveButton.ButtonPushedFcn = createCallbackFcn(app, @SaveButtonPushed, true);
-            app.SaveButton.Position = [161 336 100 23];
-            app.SaveButton.Text = 'Save';
+            % Create ExportButton
+            app.ExportButton = uibutton(app.UIFigure, 'push');
+            app.ExportButton.ButtonPushedFcn = createCallbackFcn(app, @ExportButtonPushed, true);
+            app.ExportButton.Position = [161 336 100 23];
+            app.ExportButton.Text = 'Export';
 
             % Create PlayButton
             app.PlayButton = uibutton(app.UIFigure, 'push');
